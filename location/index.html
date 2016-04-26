@@ -11,10 +11,10 @@
         padding: 0;
       }
       #map {
-        height: 75%;
+        height: 60%;
       }
       #data {
-	      height: 25%;
+	      height: 40%;
       }
     </style>
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
@@ -30,6 +30,7 @@
     		Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span>
+		<button onclick="beep()">Beep</button>
     </div>
     <!--
     <audio id="audioSlow" preload="auto">
@@ -67,7 +68,7 @@
                 {name: "slow"},
                 {name: "good"},
                 {name: "fast"},
-                {name: "update"}
+                {name: "beep"}
             ],
             path: "sounds/",
             preload: true,
@@ -146,7 +147,7 @@
 
 
 	function updateMapAndData(position) {
-	    ion.sound.play("update");
+	    ion.sound.play("beep");
             var pos = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
@@ -226,6 +227,11 @@
 	    }
 	    */
 	    $("#debug").text("All seems OK");
+	}
+
+	function beep() {
+			ion.sound.play("beep");
+
 	}
 
       function handleLocationError(pos) {
