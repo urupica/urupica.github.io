@@ -18,7 +18,7 @@
       }
     </style>
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-   <script src="js/ion.sound.js"></script>
+   <!--<script src="js/ion.sound.js"></script>-->
    </head>
   <body>
     <div id="map"></div>
@@ -27,28 +27,35 @@
 	    Accuracy: <span id="acc"></span><br/>	    
 	    Altitude: <span id="alt"></span><br/>
 		Heading: <span id="head"></span><br/>
-    		Speed: <span id="speed"></span><br/>
+    	Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span><br/>
 		<button onclick="beep()">Beep</button>
     </div>
-    <!--
+    <audio id="audioBeep" preload="auto">
+	    <source src="sounds/beep.ogg" type="audio/ogg">
+	    <source src="sounds/beep.mp3" type="audio/mp3">
+	    <source src="sounds/beep.m4a" type="audio/mpeg">
+	    Your browser does not support the audio tag.
+    </audio>
     <audio id="audioSlow" preload="auto">
-	    <source src="slow.ogg" type="audio/ogg">
-	    <source src="slow.mp3" type="audio/mp3">
+	    <source src="sounds/slow.ogg" type="audio/ogg">
+	    <source src="sounds/slow.mp3" type="audio/mp3">
+	    <source src="sounds/slow.m4a" type="audio/mpeg">
 	    Your browser does not support the audio tag.
     </audio>
     <audio id="audioGood" preload="auto">
-	    <source src="good.ogg" type="audio/ogg">
-	    <source src="good.mp3" type="audio/mp3">
+	    <source src="sounds/good.ogg" type="audio/ogg">
+	    <source src="sounds/good.mp3" type="audio/mp3">
+	    <source src="sounds/good.m4a" type="audio/mpeg">
 	    Your browser does not support the audio tag.
     </audio>
     <audio id="audioFast" preload="auto">
-	    <source src="fast.ogg" type="audio/ogg">
-	    <source src="fast.mp3" type="audio/mp3">
+	    <source src="sounds/fast.ogg" type="audio/ogg">
+	    <source src="sounds/fast.mp3" type="audio/mp3">
+	    <source src="sounds/fast.m4a" type="audio/mpeg">
 	    Your browser does not support the audio tag.
     </audio>
--->
     <script>
       // Note: This example requires that you consent to location sharing when
       // prompted by your browser. If you see the error "The Geolocation service
@@ -63,6 +70,7 @@
 
       function initMap() {
 
+		/*
         ion.sound({
             sounds: [
                 {name: "slow"},
@@ -74,32 +82,33 @@
             preload: true,
             volume: 1.0
         });
+        */
 
 
 
         map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: -34.397, lng: 150.644},
-          zoom: 17
+          	center: {lat: -34.397, lng: 150.644},
+          	zoom: 17
         });
         infoWindow = new google.maps.InfoWindow({map: map});
-	mapPositioned = false;
-	seconds = null;
-	timer = null;
+		mapPositioned = false;
+		seconds = null;
+		timer = null;
 
         // Try HTML5 geolocation.
         if (navigator.geolocation) {
-	  //updateLocation();
+	  		//updateLocation();
 
-	options = {
-  		enableHighAccuracy: true,
-  		timeout: 1000,
-  		maximumAge: 0
-	};
+			options = {
+  				enableHighAccuracy: true,
+  				timeout: 1000,
+  				maximumAge: 0
+			};
 
-	  var watchLocation = navigator.geolocation.watchPosition(updateMapAndData, error, options);
+	  		var watchLocation = navigator.geolocation.watchPosition(updateMapAndData, error, options);
         } else {
-          // Browser doesn't support Geolocation
-          handleLocationError(false, infoWindow, map.getCenter());
+          	// Browser doesn't support Geolocation
+          	handleLocationError(false, infoWindow, map.getCenter());
         }
       }
 
@@ -147,7 +156,8 @@
 
 
 	function updateMapAndData(position) {
-	    ion.sound.play("beep");
+		$("#audioBeep").get(0).play();
+	    //ion.sound.play("beep");
             var pos = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
@@ -230,9 +240,10 @@
 	}
 
 	function beep() {
-		alert("beep");
-			ion.sound.play("beep");
+		//alert("beep");
+		$("#audioBeep").get(0).play();
 
+		//ion.sound.play("beep");
 	}
 
       function handleLocationError(pos) {
