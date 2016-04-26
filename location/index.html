@@ -30,7 +30,7 @@
     	Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span><br/>
-		<button onclick="beep()">Beep</button>
+		<button onclick="loadSounds()">Load Sounds</button>
     </div>
     <audio id="audioBeep" preload="auto">
 	    <source src="sounds/beep.ogg" type="audio/ogg">
@@ -202,24 +202,24 @@
 	    	$("#speed").text("No data");
 	    } else {
 	    	$("#speed").text(position.coords.speed + "m/s");
-		/*
+		
 		if(position.coords.speed < 0.75) {
 			//var audio = new Audio('slow.ogg');
 			//audio.play();
-			//$("#audioSlow").get(0).play();
-			ion.sound.play("slow");
+			$("#audioSlow").get(0).play();
+			//ion.sound.play("slow");
 		} else if(position.coords.speed <= 1.25) { 
 			//var audio = new Audio('good.ogg');
 			//audio.play();
-			//$("#audioGood").get(0).play();
-			ion.sound.play("good");
+			$("#audioGood").get(0).play();
+			//ion.sound.play("good");
 		} else {
 			//var audio = new Audio('fast.ogg');
 			//audio.play();
-			//$("#audioFast").get(0).play();
-			ion.sound.play("fast");
+			$("#audioFast").get(0).play();
+			//ion.sound.play("fast");
 		}
-		*/
+		
 	    }
 	    stopTimer();
 	    seconds = 0;
@@ -239,9 +239,13 @@
 	    $("#debug").text("All seems OK");
 	}
 
-	function beep() {
+	function loadSounds() {
 		//alert("beep");
-		$("#audioBeep").get(0).play();
+		//$("#audioBeep").get(0).play();
+		$("#audioSlow").get(0).load();
+		$("#audioGood").get(0).load();
+		$("#audioFast").get(0).load();
+		$("#audioBeep").get(0).load();
 
 		//ion.sound.play("beep");
 	}
