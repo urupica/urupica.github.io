@@ -31,7 +31,7 @@
     	Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span><br/>
-		<button onclick="startRun()">Start!</button>
+		<button id="startButton" onclick="startRun()">Start!</button>
     </div>
     <audio id="audioBeep" preload="auto">
 	    <source src="sounds/beep.ogg" type="audio/ogg">
@@ -72,12 +72,17 @@
       var timer;
       var totalTime = 25*1000;
       var totalLength;
-      var loopHome;
+      var pathArray;
       var polyline;
       var startTime;
+      var index;
+      var time;
       //var t;
 
-      var home = { lat:-16.5219558,  lng:-68.06559969999999};
+      //var home = { lat:-16.5219558,  lng:-68.06559969999999};
+      var startDot;
+
+
 
       function initMap() {
 
@@ -95,14 +100,9 @@
         });
         */
 
-
-
-        map = new google.maps.Map(document.getElementById('map'), {
-          	center: home,
-          	zoom: 15
-        });
-
-        loopHome = [
+      		/*
+		// home loop
+        pathArray = [
 			{lat: -16.52194681423197, lng: -68.06489598709584},
 			{lat: -16.52184508166221, lng: -68.06463747278261},
 			{lat: -16.52159571388442, lng: -68.06427077677976},
@@ -118,10 +118,125 @@
 			{lat: -16.52213622700845, lng: -68.06554257126746},
 			{lat: -16.52195443635513, lng: -68.06493704474225}
   		];
+  		*/
+
+  		// aranjuez loop
+        pathArray = [
+  			{lat: -16.55321801077906, lng: -68.09233764892149},
+			{lat: -16.55347287103141, lng: -68.09249197715981},
+			{lat: -16.5536621936506, lng: -68.09262673747008},
+			{lat: -16.55376264179692, lng: -68.09270455940498},
+			{lat: -16.55381852914719, lng: -68.09278753196951},
+			{lat: -16.55403596148303, lng: -68.09296069376443},
+			{lat: -16.55415063701374, lng: -68.09306446158634},
+			{lat: -16.55435220966955, lng: -68.09314741310378},
+			{lat: -16.55448966516862, lng: -68.09328364843796},
+			{lat: -16.55460946609072, lng: -68.09333375340734},
+			{lat: -16.55482028281921, lng: -68.09336065366287},
+			{lat: -16.55502270001988, lng: -68.09342283714459},
+			{lat: -16.55514748748897, lng: -68.0934813357881},
+			{lat: -16.55523917194438, lng: -68.09353879269221},
+			{lat: -16.55545924370836, lng: -68.09366618269142},
+			{lat: -16.55568709836333, lng: -68.09378808034944},
+			{lat: -16.5558368757814, lng: -68.09388414877925},
+			{lat: -16.55598394721572, lng: -68.09397472118195},
+			{lat: -16.55582233153559, lng: -68.09388591467757},
+			{lat: -16.55566044910177, lng: -68.09378400313929},
+			{lat: -16.55537248923609, lng: -68.09362543422097},
+			{lat: -16.55520048903157, lng: -68.09352809011062},
+			{lat: -16.55507235594647, lng: -68.09346063732015},
+			{lat: -16.55495426904179, lng: -68.09341157535802},
+			{lat: -16.55478064942326, lng: -68.09336446328749},
+			{lat: -16.55458149232749, lng: -68.09333320639539},
+			{lat: -16.55446921005366, lng: -68.09327321536391},
+			{lat: -16.55437897653982, lng: -68.09320477558623},
+			{lat: -16.55430386696472, lng: -68.09314488021988},
+			{lat: -16.55419344213011, lng: -68.0930869522625},
+			{lat: -16.55408848312425, lng: -68.09302084306216},
+			{lat: -16.55395415679888, lng: -68.09290287445593},
+			{lat: -16.55385650241291, lng: -68.09282288984335},
+			{lat: -16.55378959834133, lng: -68.09275343204877},
+			{lat: -16.55371290387963, lng: -68.09266777436683},
+			{lat: -16.5535558893842, lng: -68.09254410738008},
+			{lat: -16.55336795287444, lng: -68.09243288150493},
+			{lat: -16.55300554700708, lng: -68.09221902984727},
+			{lat: -16.55283424017119, lng: -68.09210953790138},
+			{lat: -16.55269648473411, lng: -68.09196821619942},
+			{lat: -16.55261226546753, lng: -68.09190569637946},
+			{lat: -16.55246110724653, lng: -68.09181863393371},
+			{lat: -16.55229175302445, lng: -68.09176193633377},
+			{lat: -16.55213043936706, lng: -68.09169506602463},
+			{lat: -16.5519638434394, lng: -68.09162352669381},
+			{lat: -16.55180738823879, lng: -68.09155624444178},
+			{lat: -16.55164078266191, lng: -68.09152818787405},
+			{lat: -16.55152335642636, lng: -68.09153043303856},
+			{lat: -16.55131018421825, lng: -68.09152884388925},
+			{lat: -16.55100749921202, lng: -68.0915552716688},
+			{lat: -16.5506887960986, lng: -68.0916628256395},
+			{lat: -16.55048001786626, lng: -68.09172805986309},
+			{lat: -16.55022616799259, lng: -68.09182371632777},
+			{lat: -16.54997831782173, lng: -68.09191257055129},
+			{lat: -16.54974795650925, lng: -68.09202336553319},
+			{lat: -16.5495782011879, lng: -68.09210212082534},
+			{lat: -16.54929813806222, lng: -68.09218430478714},
+			{lat: -16.54955076626516, lng: -68.09255130141027},
+			{lat: -16.54959112428744, lng: -68.09258627361231},
+			{lat: -16.54969266911833, lng: -68.09252702894827},
+			{lat: -16.54980967751439, lng: -68.0924788168242},
+			{lat: -16.54994223133685, lng: -68.09243021272317},
+			{lat: -16.55004278212553, lng: -68.09239709829899},
+			{lat: -16.55012471097409, lng: -68.09241802993846},
+			{lat: -16.55019981697323, lng: -68.09241576516693},
+			{lat: -16.55028428395989, lng: -68.09239460690522},
+			{lat: -16.55047495759101, lng: -68.09246762911101},
+			{lat: -16.55101448707078, lng: -68.09268207091337},
+			{lat: -16.55185520756049, lng: -68.0929962396643},
+			{lat: -16.55271812470045, lng: -68.09334728077135},
+			{lat: -16.55365333781705, lng: -68.09373019295617},
+			{lat: -16.55375057093168, lng: -68.09367589407485},
+			{lat: -16.55377349408018, lng: -68.09357753417677},
+			{lat: -16.55323430094175, lng: -68.09309887264196},
+			{lat: -16.55219647545714, lng: -68.09266833216965},
+			{lat: -16.55110036394843, lng: -68.09225337780937},
+			{lat: -16.5503268098804, lng: -68.09227868737365},
+			{lat: -16.55019244080168, lng: -68.09232443823717},
+			{lat: -16.55006087237007, lng: -68.09234594559788},
+			{lat: -16.54992292176314, lng: -68.09239839401415},
+			{lat: -16.54979166113338, lng: -68.09246209856073},
+			{lat: -16.54961251391924, lng: -68.09254879668175},
+			{lat: -16.54956941444294, lng: -68.0925697633137},
+			{lat: -16.54931759193705, lng: -68.09221265699796},
+			{lat: -16.54934109148341, lng: -68.09216939733849},
+			{lat: -16.54958640832436, lng: -68.09207959208483},
+			{lat: -16.54978761376628, lng: -68.09199951534629},
+			{lat: -16.55006384657725, lng: -68.09188040292467},
+			{lat: -16.55029567840645, lng: -68.09180204033845},
+			{lat: -16.55053548636749, lng: -68.0917096702744},
+			{lat: -16.55075550851904, lng: -68.0916366479816},
+			{lat: -16.55090950356898, lng: -68.09158830896925},
+			{lat: -16.55110803122583, lng: -68.09154946078941},
+			{lat: -16.5513906194026, lng: -68.09153203654127},
+			{lat: -16.55156923358392, lng: -68.09153143416147},
+			{lat: -16.55174370648371, lng: -68.09154384150858},
+			{lat: -16.55203901982473, lng: -68.0916541467833},
+			{lat: -16.55238431122298, lng: -68.09178948324889},
+			{lat: -16.55256462875191, lng: -68.0918774922892},
+			{lat: -16.55274739730267, lng: -68.09202835001294},
+			{lat: -16.55289405070555, lng: -68.09214271274134},
+			{lat: -16.55318563435582, lng: -68.09232221801342}
+		];
+
+		startDot = pathArray[0];
+
+
+        map = new google.maps.Map(document.getElementById('map'), {
+          	center: startDot,
+          	zoom: 15
+        });
 
 
   		polyline = new google.maps.Polyline({
-    		path: loopHome,
+    		path: pathArray,
     		strokeColor: '#000000',
     		strokeOpacity: 1.0,
     		strokeWeight: 3
@@ -135,12 +250,12 @@
         redDot = new google.maps.Marker({
           map: map,
           icon: 'images/redDot.png',
-          position: home
+          position: startDot
         });
         blueDot = new google.maps.Marker({
           map: map,
           icon: 'images/blueDot.png',
-          position: loopHome[0]
+          position: pathArray[0]
         });
 
 		mapPositioned = false;
@@ -184,12 +299,15 @@
 	}
 
 	function computeTotalLength() {
-		//return google.maps.geometry.spherical.computeLength(loopHome);
+		//return google.maps.geometry.spherical.computeLength(pathArray);
 		return google.maps.geometry.spherical.computeLength(polyline.getPath().getArray());
 	}
 
 	function startRun() {
+		$("#startButton").prop('disabled', true);
 		startTime = Date.now();
+		index = 1;
+		time = 0;
         run();
 	}
 
@@ -199,31 +317,33 @@
 		//t += 100;
 		if(t < totalTime) {
 			setTimeout(run, 1000);
+		} else {
+			$("#startButton").prop('disabled', false);
 		}
 	}
 
 	function moveBlueDot(t) {
 		if(t >= totalTime) {
-			blueDot.setPosition(loopHome[loopHome.length - 1]);
+			blueDot.setPosition(pathArray[pathArray.length - 1]);
 		} else {
 			var pace = totalTime/totalLength;
-			var time = 0;
+			//var time = 0;
 			var array = polyline.getPath().getArray();
-			i = 1;
-			var partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[0], array[1]);
+			//i = 1;
+			var partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[index - 1], array[index]);
 			var partialTime = partialDistance*pace;
 			while(time + partialTime <= t) {
 				time += partialTime;
-				i++;
-				if(i >= loopHome.length) {
+				index++;
+				if(index >= pathArray.length) {
 					break;
 				}
-				partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[i-1], array[i]);
+				partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[index-1], array[index]);
 				partialTime = partialDistance*pace;
 			}
 			d = (t - time)/partialTime;
-			var lat = d*loopHome[i].lat + (1-d)*loopHome[i-1].lat;
-			var lng = d*loopHome[i].lng + (1-d)*loopHome[i-1].lng;
+			var lat = d*pathArray[index].lat + (1-d)*pathArray[index-1].lat;
+			var lng = d*pathArray[index].lng + (1-d)*pathArray[index-1].lng;
 			var position = {lat:lat, lng:lng};
 			blueDot.setPosition(position);
 		}
@@ -256,7 +376,7 @@
 
 
 	function updateMapAndData(position) {
-		$("#audioBeep").get(0).play();
+		//$("#audioBeep").get(0).play();
 	    //ion.sound.play("beep");
         var pos = {
             lat: position.coords.latitude,
@@ -265,7 +385,7 @@
         redDot.setPosition(pos);
         //infoWindow.setPosition(pos);
         //infoWindow.setContent('You are here.');
-	    map.setCenter(pos);
+	    //map.setCenter(pos);
 	    /*
 	    if(!mapPositioned) {
 	            map.setCenter(pos);
