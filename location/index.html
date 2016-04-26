@@ -191,7 +191,7 @@
 	    	$("#speed").text("No data");
 	    } else {
 	    	$("#speed").text(position.coords.speed + "m/s");
-		ion.sound.play("bell_ring");
+		/*
 		if(position.coords.speed < 0.75) {
 			//var audio = new Audio('slow.ogg');
 			//audio.play();
@@ -208,6 +208,7 @@
 			//$("#audioFast").get(0).play();
 			ion.sound.play("fast");
 		}
+		*/
 	    }
 	    stopTimer();
 	    seconds = 0;
