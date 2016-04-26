@@ -31,6 +31,7 @@
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span>
     </div>
+    <!--
     <audio id="audioSlow" preload="auto">
 	    <source src="slow.ogg" type="audio/ogg">
 	    <source src="slow.mp3" type="audio/mp3">
@@ -46,6 +47,7 @@
 	    <source src="fast.mp3" type="audio/mp3">
 	    Your browser does not support the audio tag.
     </audio>
+-->
     <script>
       // Note: This example requires that you consent to location sharing when
       // prompted by your browser. If you see the error "The Geolocation service
@@ -62,8 +64,9 @@
 
         ion.sound({
             sounds: [
-                {name: "beer_can_opening"},
-                {name: "bell_ring"}
+                {name: "slow"},
+                {name: "good"},
+                {name: "fast"}
             ],
             path: "sounds/",
             preload: true,
@@ -190,15 +193,18 @@
 		if(position.coords.speed < 0.75) {
 			//var audio = new Audio('slow.ogg');
 			//audio.play();
-			$("#audioSlow").get(0).play();
+			//$("#audioSlow").get(0).play();
+			ion.sound.play("slow");
 		} else if(position.coords.speed <= 1.25) { 
 			//var audio = new Audio('good.ogg');
 			//audio.play();
-			$("#audioGood").get(0).play();
+			//$("#audioGood").get(0).play();
+			ion.sound.play("good");
 		} else {
 			//var audio = new Audio('fast.ogg');
 			//audio.play();
-			$("#audioFast").get(0).play();
+			//$("#audioFast").get(0).play();
+			ion.sound.play("fast");
 		}
 	    }
 	    stopTimer();
