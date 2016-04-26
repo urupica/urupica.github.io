@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geolocation</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 75%;
+      }
+      #data {
+	      height: 25%;
+      }
+    </style>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="data">
+	    Location: <span id="loc"></span><br/>
+	    Accuracy: <span id="acc"></span><br/>	    
+	    Altitude: <span id="alt"></span><br/>
+		Heading: <span id="head"></span><br/>
+    		Speed: <span id="speed"></span><br/>
+		Last update: <span id="time">No update yet</span><br/>
+		Debug: <span id="debug"></span>
+    </div>
+    <script>
+      // Note: This example requires that you consent to location sharing when
+      // prompted by your browser. If you see the error "The Geolocation service
+      // failed.", it means you probably did not give permission for the browser to
+      // locate you.
+
+      var infoWindow;
+      var map;
+      var mapPositioned;
+      var seconds;
+      var timer;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: -34.397, lng: 150.644},
+          zoom: 15
+        });
+        infoWindow = new google.maps.InfoWindow({map: map});
+	mapPositioned = false;
+	seconds = null;
+	timer = null;
+
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+	  //updateLocation();
+
+	options = {
+  		enableHighAccuracy: true,
+  		timeout: 1000,
+  		maximumAge: 0
+	};
+
+	  var watchLocation = navigator.geolocation.watchPosition(updateMapAndData, error, options);
+        } else {
+          // Browser doesn't support Geolocation
+          handleLocationError(false, infoWindow, map.getCenter());
+        }
+      }
+
+	function startTimer() {
+		if(seconds == 0) {
+	    		$("#time").text("Just updated");
+		} else {
+	    		$("#time").text(seconds + " second" + (seconds == 1 ? "" : "s") + " ago");
+		}
+		seconds += 1;
+		timer = setTimeout(startTimer, 1000);
+	}
+
+	function stopTimer() {
+		seconds = null;
+		if(timer != null) { 
+			clearTimeout(timer);
+		}
+	}
+
+	/*
+      function updateLocation() {
+          navigator.geolocation.getCurrentPosition(updateMapAndData, handleLocationError, setOptions);
+	  setTimeout(updateLocation ,100);
+      }
+      */
+
+	/*
+	function setOptions(geoLoc) {
+            geoLoc.enableHighAccuracy = true;
+            geoLoc.timeout = 30;
+            geoLoc.maximumAge = 0;
+        }
+	*/
+
+	function error(err) {
+	    $("#loc").text("");
+	    $("#acc").text("");
+	    $("#alt").text("");
+	    $("#head").text("");
+	    $("#speed").text("");
+	    $("#time").text("");
+		$("#debug").text('ERROR(' + err.code + '): ' + err.message + ". Have some patience...");
+	}
+
+
+	function updateMapAndData(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            infoWindow.setPosition(pos);
+            infoWindow.setContent('You are here.');
+	    map.setCenter(pos);
+	    /*
+	    if(!mapPositioned) {
+	            map.setCenter(pos);
+			mapPositioned = true;
+		}
+		*/
+	    $("#loc").text("lat: " + position.coords.latitude + ", lon: " + position.coords.longitude);
+	    $("#acc").text(Math.round(position.coords.accuracy) + " m");
+	    var altitudeString = "";
+	    if(position.coords.altitude == null) {
+		altitudeString += "No data";
+	    } else {
+		    altitudeString += Math.round(position.coords.altitude);
+	    	if(position.coords.altitudeAccuracy == null) {
+			altitudeString += "(accuracy: No data)";
+		} else {
+			altitudeString += " (accuracy: " + position.coords.altitudeAccuracy + ")"
+		}
+	    }
+	    $("#alt").text(altitudeString);
+	    if(isNaN(position.coords.heading)) {
+	    	$("#head").text("No data");
+	    } else {
+		    var dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+
+		    for(i=0; i<9; i++) {
+			    if(position.coords.heading < 22.5 + 45*i) {
+	    			$("#head").text(dirs[i%8]);
+				break;
+			    }
+		    }
+	    }
+	    if(isNaN(position.coords.speed) || position.coords.speed == null) {
+	    	$("#speed").text("No data");
+	    } else {
+	    	$("#speed").text(position.coords.speed + "m/s");
+		if(position.coords.speed < 0.75) {
+			var audio = new Audio('slow.ogg');
+			audio.play();
+		} else if(position.coords.speed <= 1.25) { 
+			var audio = new Audio('good.ogg');
+			audio.play();
+		} else {
+			var audio = new Audio('fast.ogg');
+			audio.play();
+		}
+	    }
+	    stopTimer();
+	    seconds = 0;
+	    startTimer();
+	    /*
+	    if(isNaN(position.timestamp) || position.timestamp == null) {
+	    	$("#time").text("No data");
+	    } else {
+		    if(timestamp == null) {
+	    		$("#time").text("First time");
+		    } else {
+	    		$("#time").text(Math.round((position.timestamp - timestamp)/1000) + " seconds ago");
+			timestamp = position.timestamp;
+		    }
+	    }
+	    */
+	    $("#debug").text("All seems OK");
+	}
+
+      function handleLocationError(pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(browserHasGeolocation ?
+                              'Error: The Geolocation service failed.' :
+                              'Error: Your browser doesn\'t support geolocation.');
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?callback=initMap">
+    </script>
+  </body>
+</html>
