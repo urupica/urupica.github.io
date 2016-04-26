@@ -30,6 +30,18 @@
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span>
     </div>
+    <audio id="audioSlow" preload="auto">
+	    <source src="slow.ogg" type="audio/ogg">
+	    Your browser does not support the audio tag.
+    </audio>
+    <audio id="audioGood" preload="auto">
+	    <source src="good.ogg" type="audio/ogg">
+	    Your browser does not support the audio tag.
+    </audio>
+    <audio id="audioFast" preload="auto">
+	    <source src="fast.ogg" type="audio/ogg">
+	    Your browser does not support the audio tag.
+    </audio>
     <script>
       // Note: This example requires that you consent to location sharing when
       // prompted by your browser. If you see the error "The Geolocation service
@@ -43,8 +55,6 @@
       var timer;
 
       function initMap() {
-			var audio = new Audio('slow.ogg');
-			audio.play();
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: -34.397, lng: 150.644},
           zoom: 17
@@ -160,14 +170,17 @@
 	    } else {
 	    	$("#speed").text(position.coords.speed + "m/s");
 		if(position.coords.speed < 0.75) {
-			var audio = new Audio('slow.ogg');
-			audio.play();
+			//var audio = new Audio('slow.ogg');
+			//audio.play();
+			$("audioSlow").get(0).play();
 		} else if(position.coords.speed <= 1.25) { 
-			var audio = new Audio('good.ogg');
-			audio.play();
+			//var audio = new Audio('good.ogg');
+			//audio.play();
+			$("audioSlow").get(0).play();
 		} else {
-			var audio = new Audio('fast.ogg');
-			audio.play();
+			//var audio = new Audio('fast.ogg');
+			//audio.play();
+			$("audioSlow").get(0).play();
 		}
 	    }
 	    stopTimer();
