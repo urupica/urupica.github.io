@@ -172,15 +172,15 @@
 		if(position.coords.speed < 0.75) {
 			//var audio = new Audio('slow.ogg');
 			//audio.play();
-			$("audioSlow").get(0).play();
+			$("#audioSlow").get(0).play();
 		} else if(position.coords.speed <= 1.25) { 
 			//var audio = new Audio('good.ogg');
 			//audio.play();
-			$("audioSlow").get(0).play();
+			$("#audioGood").get(0).play();
 		} else {
 			//var audio = new Audio('fast.ogg');
 			//audio.play();
-			$("audioSlow").get(0).play();
+			$("#audioFast").get(0).play();
 		}
 	    }
 	    stopTimer();
