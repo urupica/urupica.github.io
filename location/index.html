@@ -43,6 +43,8 @@
       var timer;
 
       function initMap() {
+			var audio = new Audio('slow.ogg');
+			audio.play();
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: -34.397, lng: 150.644},
           zoom: 17
