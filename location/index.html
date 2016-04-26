@@ -23,6 +23,7 @@
   <body>
     <div id="map"></div>
     <div id="data">
+		<button onclick="loadSounds()">Load Sounds</button><br/>
 	    Location: <span id="loc"></span><br/>
 	    Accuracy: <span id="acc"></span><br/>	    
 	    Altitude: <span id="alt"></span><br/>
@@ -30,7 +31,7 @@
     	Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span><br/>
-		<button onclick="loadSounds()">Load Sounds</button>
+		<button onclick="startRun()">Start!</button>
     </div>
     <audio id="audioBeep" preload="auto">
 	    <source src="sounds/beep.ogg" type="audio/ogg">
@@ -63,11 +64,20 @@
       // locate you.
 
       //var infoWindow;
-      var dot;
+      var redDot;
+      var blueDot;
       var map;
       var mapPositioned;
       var seconds;
       var timer;
+      var totalTime = 25*1000;
+      var totalLength;
+      var loopHome;
+      var polyline;
+      var startTime;
+      //var t;
+
+      var home = { lat:-16.5219558,  lng:-68.06559969999999};
 
       function initMap() {
 
@@ -88,14 +98,49 @@
 
 
         map = new google.maps.Map(document.getElementById('map'), {
-          	center: {lat: -34.397, lng: 150.644},
-          	zoom: 17
+          	center: home,
+          	zoom: 15
         });
+
+        loopHome = [
+			{lat: -16.52194681423197, lng: -68.06489598709584},
+			{lat: -16.52184508166221, lng: -68.06463747278261},
+			{lat: -16.52159571388442, lng: -68.06427077677976},
+			{lat: -16.52139693876164, lng: -68.06403276908758},
+			{lat: -16.52060402582187, lng: -68.06343841909319},
+			{lat: -16.52005410985657, lng: -68.06313053093483},
+			{lat: -16.51964930609482, lng: -68.06385953370396},
+			{lat: -16.52030651834609, lng: -68.06421685238097},
+			{lat: -16.52079704118083, lng: -68.06453877286083},
+			{lat: -16.52103052481336, lng: -68.06473373885925},
+			{lat: -16.52119910752698, lng: -68.06502206586399},
+			{lat: -16.5212686141782, lng: -68.06556641264461},
+			{lat: -16.52213622700845, lng: -68.06554257126746},
+			{lat: -16.52195443635513, lng: -68.06493704474225}
+  		];
+
+
+  		polyline = new google.maps.Polyline({
+    		path: loopHome,
+    		strokeColor: '#000000',
+    		strokeOpacity: 1.0,
+    		strokeWeight: 3
+  		});
+
+	  	polyline.setMap(map);
+
+  		totalLength = computeTotalLength();
+
         //infoWindow = new google.maps.InfoWindow({map: map});
-        dot = new google.maps.Marker({
+        redDot = new google.maps.Marker({
           map: map,
-          icon: 'images/dot.png',
-          position: {lat: -34.397, lng: 150.644}
+          icon: 'images/redDot.png',
+          position: home
+        });
+        blueDot = new google.maps.Marker({
+          map: map,
+          icon: 'images/blueDot.png',
+          position: loopHome[0]
         });
 
 		mapPositioned = false;
@@ -117,6 +162,8 @@
           	// Browser doesn't support Geolocation
           	handleLocationError(false, infoWindow, map.getCenter());
         }
+
+        //t = 0;
       }
 
 	function startTimer() {
@@ -133,6 +180,52 @@
 		seconds = null;
 		if(timer != null) { 
 			clearTimeout(timer);
+		}
+	}
+
+	function computeTotalLength() {
+		//return google.maps.geometry.spherical.computeLength(loopHome);
+		return google.maps.geometry.spherical.computeLength(polyline.getPath().getArray());
+	}
+
+	function startRun() {
+		startTime = Date.now();
+        run();
+	}
+
+	function run() {
+		var t = Date.now() - startTime;
+		moveBlueDot(t);
+		//t += 100;
+		if(t < totalTime) {
+			setTimeout(run, 1000);
+		}
+	}
+
+	function moveBlueDot(t) {
+		if(t >= totalTime) {
+			blueDot.setPosition(loopHome[loopHome.length - 1]);
+		} else {
+			var pace = totalTime/totalLength;
+			var time = 0;
+			var array = polyline.getPath().getArray();
+			i = 1;
+			var partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[0], array[1]);
+			var partialTime = partialDistance*pace;
+			while(time + partialTime <= t) {
+				time += partialTime;
+				i++;
+				if(i >= loopHome.length) {
+					break;
+				}
+				partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[i-1], array[i]);
+				partialTime = partialDistance*pace;
+			}
+			d = (t - time)/partialTime;
+			var lat = d*loopHome[i].lat + (1-d)*loopHome[i-1].lat;
+			var lng = d*loopHome[i].lng + (1-d)*loopHome[i-1].lng;
+			var position = {lat:lat, lng:lng};
+			blueDot.setPosition(position);
 		}
 	}
 
@@ -165,13 +258,13 @@
 	function updateMapAndData(position) {
 		$("#audioBeep").get(0).play();
 	    //ion.sound.play("beep");
-            var pos = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-            dot.setPosition(pos);
-            //infoWindow.setPosition(pos);
-            //infoWindow.setContent('You are here.');
+        var pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+        };
+        redDot.setPosition(pos);
+        //infoWindow.setPosition(pos);
+        //infoWindow.setContent('You are here.');
 	    map.setCenter(pos);
 	    /*
 	    if(!mapPositioned) {
@@ -265,7 +358,7 @@
       }
     </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?callback=initMap&libraries=geometry">
     </script>
   </body>
 </html>
