@@ -18,7 +18,8 @@
       }
     </style>
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-  </head>
+   <script src="js/ion.sound.js"></script>
+   </head>
   <body>
     <div id="map"></div>
     <div id="data">
@@ -58,6 +59,19 @@
       var timer;
 
       function initMap() {
+
+        ion.sound({
+            sounds: [
+                {name: "beer_can_opening"},
+                {name: "bell_ring"}
+            ],
+            path: "sounds/",
+            preload: true,
+            volume: 1.0
+        });
+
+
+
         map = new google.maps.Map(document.getElementById('map'), {
           center: {lat: -34.397, lng: 150.644},
           zoom: 17
@@ -172,6 +186,7 @@
 	    	$("#speed").text("No data");
 	    } else {
 	    	$("#speed").text(position.coords.speed + "m/s");
+		ion.sound.play("bell_ring");
 		if(position.coords.speed < 0.75) {
 			//var audio = new Audio('slow.ogg');
 			//audio.play();
