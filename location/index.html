@@ -31,6 +31,7 @@
     	Speed: <span id="speed"></span><br/>
 		Last update: <span id="time">No update yet</span><br/>
 		Debug: <span id="debug"></span><br/>
+		Ran so far: <span id="ran">0 m</span><br/>
 		<button id="startButton" onclick="startRun()">Start!</button>
     </div>
     <audio id="audioBeep" preload="auto">
@@ -58,12 +59,6 @@
 	    Your browser does not support the audio tag.
     </audio>
     <script>
-      // Note: This example requires that you consent to location sharing when
-      // prompted by your browser. If you see the error "The Geolocation service
-      // failed.", it means you probably did not give permission for the browser to
-      // locate you.
-
-      //var infoWindow;
       var redDot;
       var blueDot;
       var map;
@@ -75,12 +70,16 @@
       var pathArray;
       var polyline;
       var startTime;
+      var distanceCovered;
+      var lastPosition;
+      var targetDistance;
+      var targetDistancePartial;
       var index;
       var time;
-      //var t;
-
+      var running;
       //var home = { lat:-16.5219558,  lng:-68.06559969999999};
       var startDot;
+      var lastAudio;
 
 
 
@@ -120,6 +119,7 @@
   		];
   		*/
 
+  		/*
   		// aranjuez loop
         pathArray = [
   			{lat: -16.55321801077906, lng: -68.09233764892149},
@@ -225,6 +225,120 @@
 			{lat: -16.55289405070555, lng: -68.09214271274134},
 			{lat: -16.55318563435582, lng: -68.09232221801342}
 		];
+		*/
+
+		// meseta + achumani loop
+		pathArray = [
+			{lat: -16.52207523409863, lng: -68.0648567625816},
+			{lat: -16.52224276773373, lng: -68.06537742534073},
+			{lat: -16.522451131823, lng: -68.06592646422192},
+			{lat: -16.52255456351352, lng: -68.06616740887134},
+			{lat: -16.52274079061424, lng: -68.06641260991523},
+			{lat: -16.52317281646508, lng: -68.0667380375959},
+			{lat: -16.52348864764332, lng: -68.06693818897408},
+			{lat: -16.52461239387891, lng: -68.06752438671309},
+			{lat: -16.52567348782791, lng: -68.06805931933243},
+			{lat: -16.52610929741422, lng: -68.06831214029945},
+			{lat: -16.52638442175237, lng: -68.06845122605078},
+			{lat: -16.52670450328592, lng: -68.06867825629332},
+			{lat: -16.52691884674617, lng: -68.06895383232218},
+			{lat: -16.52767378855746, lng: -68.07030435315033},
+			{lat: -16.52808216016121, lng: -68.07100003231625},
+			{lat: -16.52818448566416, lng: -68.07121197805806},
+			{lat: -16.52806381993895, lng: -68.0713269570079},
+			{lat: -16.52804806289902, lng: -68.07147746570199},
+			{lat: -16.52818238847131, lng: -68.07169191934749},
+			{lat: -16.52943606272814, lng: -68.07371607519096},
+			{lat: -16.52956370854811, lng: -68.07396673241443},
+			{lat: -16.52904975777669, lng: -68.07432865467756},
+			{lat: -16.52925346562475, lng: -68.07450178799321},
+			{lat: -16.52983239426763, lng: -68.0749973246987},
+			{lat: -16.53020307384128, lng: -68.07532037248843},
+			{lat: -16.53044643945099, lng: -68.07558428244573},
+			{lat: -16.53062408815716, lng: -68.07582839888128},
+			{lat: -16.53136471270093, lng: -68.07739417304234},
+			{lat: -16.5314233059454, lng: -68.0776161793497},
+			{lat: -16.53134846000255, lng: -68.07783309518801},
+			{lat: -16.53126347938065, lng: -68.07800660838431},
+			{lat: -16.53109210671102, lng: -68.07796160085441},
+			{lat: -16.53092021228604, lng: -68.07786360983475},
+			{lat: -16.53070410262328, lng: -68.0778029268992},
+			{lat: -16.53034505550336, lng: -68.07772061840672},
+			{lat: -16.5298081809138, lng: -68.07745811947422},
+			{lat: -16.52942706685798, lng: -68.07732202261542},
+			{lat: -16.52901248942122, lng: -68.07719522905299},
+			{lat: -16.52883343882927, lng: -68.07720240021241},
+			{lat: -16.52843613819203, lng: -68.0773029504909},
+			{lat: -16.5280961366177, lng: -68.07746930985613},
+			{lat: -16.52773047351478, lng: -68.07760775541591},
+			{lat: -16.527601054735, lng: -68.07754129627246},
+			{lat: -16.52744793074327, lng: -68.07741024583791},
+			{lat: -16.52736321799473, lng: -68.07723217481104},
+			{lat: -16.52743671153955, lng: -68.07733213112425},
+			{lat: -16.52766090058878, lng: -68.07758728992241},
+			{lat: -16.52780023815255, lng: -68.07759972595484},
+			{lat: -16.52819875919488, lng: -68.07743375054235},
+			{lat: -16.52852342755711, lng: -68.07727190450012},
+			{lat: -16.5287791346401, lng: -68.07720480637346},
+			{lat: -16.52897879130151, lng: -68.0771721522548},
+			{lat: -16.52952628102389, lng: -68.07735806493648},
+			{lat: -16.52998165314724, lng: -68.07752725251072},
+			{lat: -16.53040539037986, lng: -68.07775105611842},
+			{lat: -16.5307998897202, lng: -68.07783906226649},
+			{lat: -16.53103047648851, lng: -68.07792243073868},
+			{lat: -16.53117235536281, lng: -68.07802144251892},
+			{lat: -16.53132181457652, lng: -68.07798431148022},
+			{lat: -16.53141537797117, lng: -68.07773655377136},
+			{lat: -16.53142275925956, lng: -68.077495684629},
+			{lat: -16.53121241837167, lng: -68.07700816571608},
+			{lat: -16.53057311874067, lng: -68.07572615948762},
+			{lat: -16.53030164281563, lng: -68.07541957294944},
+			{lat: -16.53000746378298, lng: -68.07514539217803},
+			{lat: -16.5295266621375, lng: -68.07473803404577},
+			{lat: -16.52900966520301, lng: -68.0742989812094},
+			{lat: -16.52960073927741, lng: -68.07394063699944},
+			{lat: -16.52999321139632, lng: -68.07458238617969},
+			{lat: -16.53027630056769, lng: -68.07496526145559},
+			{lat: -16.53069915545779, lng: -68.07532278859316},
+			{lat: -16.53339100856521, lng: -68.07710264190227},
+			{lat: -16.53355584536936, lng: -68.07714153945508},
+			{lat: -16.53458370205498, lng: -68.07542527368796},
+			{lat: -16.53542795618235, lng: -68.07392228768332},
+			{lat: -16.5351027501432, lng: -68.07343410419317},
+			{lat: -16.53410640400176, lng: -68.07211018750016},
+			{lat: -16.53373698354283, lng: -68.07242232047861},
+			{lat: -16.5329656815775, lng: -68.07371127806107},
+			{lat: -16.53359904585497, lng: -68.0740929604966},
+			{lat: -16.53411979205479, lng: -68.07329114517795},
+			{lat: -16.53309029196835, lng: -68.07261379867133},
+			{lat: -16.53262652455103, lng: -68.07186210557109},
+			{lat: -16.53160483994494, lng: -68.07023949172797},
+			{lat: -16.53012318884134, lng: -68.07126285433803},
+			{lat: -16.53039153005336, lng: -68.07162791938642},
+			{lat: -16.53124355756103, lng: -68.07105683574686},
+			{lat: -16.53191033567119, lng: -68.07065407105863},
+			{lat: -16.53111177132806, lng: -68.06944640535887},
+			{lat: -16.53161573018209, lng: -68.06912700567742},
+			{lat: -16.53159365437935, lng: -68.06906997837086},
+			{lat: -16.53105887113807, lng: -68.06938208174439},
+			{lat: -16.5304176819609, lng: -68.06975531360025},
+			{lat: -16.5295712526703, lng: -68.07032162721205},
+			{lat: -16.52831674726787, lng: -68.07118040226021},
+			{lat: -16.52820867399753, lng: -68.07124339629371},
+			{lat: -16.52799806628104, lng: -68.07082623513209},
+			{lat: -16.52709076322756, lng: -68.06924728565069},
+			{lat: -16.52683018675015, lng: -68.06881476747878},
+			{lat: -16.52649139312852, lng: -68.06852716903458},
+			{lat: -16.52582444522177, lng: -68.06812611019714},
+			{lat: -16.52469376438567, lng: -68.06755934655499},
+			{lat: -16.52356637119521, lng: -68.06698643128576},
+			{lat: -16.52323619238146, lng: -68.06680608889721},
+			{lat: -16.52296371083651, lng: -68.06660264586583},
+			{lat: -16.52265869997578, lng: -68.06632177770879},
+			{lat: -16.52250526233031, lng: -68.06605770472503},
+			{lat: -16.52233102488945, lng: -68.06562147640281},
+			{lat: -16.52211298107669, lng: -68.06489859473933}
+		];
 
 		startDot = pathArray[0];
 
@@ -246,7 +360,6 @@
 
   		totalLength = computeTotalLength();
 
-        //infoWindow = new google.maps.InfoWindow({map: map});
         redDot = new google.maps.Marker({
           map: map,
           icon: 'images/redDot.png',
@@ -261,11 +374,10 @@
 		mapPositioned = false;
 		seconds = null;
 		timer = null;
+		running = false;
 
         // Try HTML5 geolocation.
         if (navigator.geolocation) {
-	  		//updateLocation();
-
 			options = {
   				enableHighAccuracy: true,
   				timeout: 1000,
@@ -273,12 +385,13 @@
 			};
 
 	  		var watchLocation = navigator.geolocation.watchPosition(updateMapAndData, error, options);
-        } else {
+        }
+        /* 
+        else {
           	// Browser doesn't support Geolocation
           	handleLocationError(false, infoWindow, map.getCenter());
         }
-
-        //t = 0;
+        */
       }
 
 	function startTimer() {
@@ -308,13 +421,17 @@
 		startTime = Date.now();
 		index = 1;
 		time = 0;
+		distanceCovered = 0;
+		targetDistance = 0;
+		targetDistancePartial = 0;
+		lastPosition = null;
+		running = true;
         run();
 	}
 
 	function run() {
 		var t = Date.now() - startTime;
 		moveBlueDot(t);
-		//t += 100;
 		if(t < totalTime) {
 			setTimeout(run, 1000);
 		} else {
@@ -327,13 +444,12 @@
 			blueDot.setPosition(pathArray[pathArray.length - 1]);
 		} else {
 			var pace = totalTime/totalLength;
-			//var time = 0;
 			var array = polyline.getPath().getArray();
-			//i = 1;
 			var partialDistance = google.maps.geometry.spherical.computeDistanceBetween(array[index - 1], array[index]);
 			var partialTime = partialDistance*pace;
 			while(time + partialTime <= t) {
 				time += partialTime;
+				targetDistancePartial += partialDistance;
 				index++;
 				if(index >= pathArray.length) {
 					break;
@@ -346,23 +462,10 @@
 			var lng = d*pathArray[index].lng + (1-d)*pathArray[index-1].lng;
 			var position = {lat:lat, lng:lng};
 			blueDot.setPosition(position);
+			targetDistance = targetDistancePartial + d*partialDistance;
 		}
 	}
 
-	/*
-      function updateLocation() {
-          navigator.geolocation.getCurrentPosition(updateMapAndData, handleLocationError, setOptions);
-	  setTimeout(updateLocation ,100);
-      }
-      */
-
-	/*
-	function setOptions(geoLoc) {
-            geoLoc.enableHighAccuracy = true;
-            geoLoc.timeout = 30;
-            geoLoc.maximumAge = 0;
-        }
-	*/
 
 	function error(err) {
 	    $("#loc").text("");
@@ -371,6 +474,7 @@
 	    $("#head").text("");
 	    $("#speed").text("");
 	    $("#time").text("");
+	    $("#ran").text("");
 		$("#debug").text('ERROR(' + err.code + '): ' + err.message + ". Have some patience...");
 	}
 
@@ -382,10 +486,22 @@
             lat: position.coords.latitude,
             lng: position.coords.longitude
         };
+
+        var posLatLng = new google.maps.LatLng(pos);
+
+        if(running && lastPosition != null) {
+			distanceCovered += google.maps.geometry.spherical.computeDistanceBetween(lastPosition, posLatLng);
+			console.log("distance covered: " + distanceCovered);
+			$("#ran").text(distanceCovered + " m");
+
+		}
+		if(running) {
+			lastPosition = posLatLng;
+		}
+
+
         redDot.setPosition(pos);
-        //infoWindow.setPosition(pos);
-        //infoWindow.setContent('You are here.');
-	    //map.setCenter(pos);
+	    map.setCenter(pos);
 	    /*
 	    if(!mapPositioned) {
 	            map.setCenter(pos);
@@ -400,10 +516,10 @@
 	    } else {
 		    altitudeString += Math.round(position.coords.altitude);
 	    	if(position.coords.altitudeAccuracy == null) {
-			altitudeString += "(accuracy: No data)";
-		} else {
-			altitudeString += " (accuracy: " + position.coords.altitudeAccuracy + ")"
-		}
+				altitudeString += "(accuracy: No data)";
+			} else {
+				altitudeString += " (accuracy: " + position.coords.altitudeAccuracy + ")"
+			}
 	    }
 	    $("#alt").text(altitudeString);
 	    if(isNaN(position.coords.heading)) {
@@ -414,7 +530,7 @@
 		    for(i=0; i<9; i++) {
 			    if(position.coords.heading < 22.5 + 45*i) {
 	    			$("#head").text(dirs[i%8]);
-				break;
+					break;
 			    }
 		    }
 	    }
@@ -422,60 +538,52 @@
 	    	$("#speed").text("No data");
 	    } else {
 	    	$("#speed").text(position.coords.speed + "m/s");
+
+
+	    if(distanceCovered < targetDistance) {
+	    	console.log("too slow");
+			$("#audioSlow").get(0).play();
+	    } else {
+	    	console.log("too fast");
+	    	$("#audioFast").get(0).play();
+	    }
 		
+		/*
 		if(position.coords.speed < 0.75) {
-			//var audio = new Audio('slow.ogg');
-			//audio.play();
 			$("#audioSlow").get(0).play();
 			//ion.sound.play("slow");
 		} else if(position.coords.speed <= 1.25) { 
-			//var audio = new Audio('good.ogg');
-			//audio.play();
 			$("#audioGood").get(0).play();
 			//ion.sound.play("good");
 		} else {
-			//var audio = new Audio('fast.ogg');
-			//audio.play();
 			$("#audioFast").get(0).play();
 			//ion.sound.play("fast");
 		}
+		*/
 		
 	    }
 	    stopTimer();
 	    seconds = 0;
 	    startTimer();
-	    /*
-	    if(isNaN(position.timestamp) || position.timestamp == null) {
-	    	$("#time").text("No data");
-	    } else {
-		    if(timestamp == null) {
-	    		$("#time").text("First time");
-		    } else {
-	    		$("#time").text(Math.round((position.timestamp - timestamp)/1000) + " seconds ago");
-			timestamp = position.timestamp;
-		    }
-	    }
-	    */
 	    $("#debug").text("All seems OK");
 	}
 
 	function loadSounds() {
-		//alert("beep");
 		//$("#audioBeep").get(0).play();
 		$("#audioSlow").get(0).load();
 		$("#audioGood").get(0).load();
 		$("#audioFast").get(0).load();
 		$("#audioBeep").get(0).load();
-
-		//ion.sound.play("beep");
 	}
 
+		/*
       function handleLocationError(pos) {
         infoWindow.setPosition(pos);
         infoWindow.setContent(browserHasGeolocation ?
                               'Error: The Geolocation service failed.' :
                               'Error: Your browser doesn\'t support geolocation.');
       }
+      */
     </script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?callback=initMap&libraries=geometry">
