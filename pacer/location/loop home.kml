@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>loop home.kml</name>
+	<Style id="inline">
+		<LineStyle>
+			<color>ff0000ff</color>
+			<width>2</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="inline0">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#inline1</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#inline</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="inline1">
+		<LineStyle>
+			<color>ff0000ff</color>
+			<width>2</width>
+		</LineStyle>
+		<PolyStyle>
+			<fill>0</fill>
+		</PolyStyle>
+	</Style>
+	<Placemark>
+		<name>loop home</name>
+		<styleUrl>#inline0</styleUrl>
+		<LineString>
+			<tessellate>1</tessellate>
+			<coordinates>
+				-68.06489598709584,-16.52194681423197,0 -68.06463747278261,-16.52184508166221,0 -68.06427077677976,-16.52159571388442,0 -68.06403276908758,-16.52139693876164,0 -68.06343841909319,-16.52060402582187,0 -68.06313053093483,-16.52005410985657,0 -68.06385953370396,-16.51964930609482,0 -68.06421685238097,-16.52030651834609,0 -68.06453877286083,-16.52079704118083,0 -68.06473373885925,-16.52103052481336,0 -68.06502206586399,-16.52119910752698,0 -68.06556641264461,-16.5212686141782,0 -68.06554257126746,-16.52213622700845,0 -68.06493704474225,-16.52195443635513,0 
+			</coordinates>
+		</LineString>
+	</Placemark>
+</Document>
+</kml>
