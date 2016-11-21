@@ -1,0 +1,8 @@
+a[href $='.pdf'] { 
+   padding-right: 18px;
+   background: transparent url(pdf_icon.png) no-repeat center right;
+}
+
+li{
+  margin: 10px 0;
+}
