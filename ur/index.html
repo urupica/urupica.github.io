@@ -56,7 +56,7 @@
     var WIDTH = 800;
     var HEIGHT = 500;
 
-    var CHIPS = 1;
+    var CHIPS = 7;
 
     var BOARD_PADDING = 18;
     var CELL_SPACING = 8;
@@ -152,9 +152,10 @@
       updates[BLACK + '/' + UID] = -1;
       updates[WHITE + '/' + NAME] = -1;
       updates[WHITE + '/' + UID] = -1;
-      updates[MOVES + '/' + CURRENT + '/' + TURN] = WHITE;
+      updates[MOVES + '/' + CURRENT + '/' + TURN] = -1;
       updates[MOVES + '/' + CURRENT + '/' + DICE] = -1;
       updates[MOVES + '/' + CURRENT + '/' + COUNTER] = -1;
+      updates[MOVES + '/' + LAST + '/' + COLOR] = -1;
       updates[MOVES + '/' + LAST + '/' + ID] = -1;
       updates[MOVES + '/' + LAST + '/' + NEW_POSITION] = -1;
       firebase.database().ref().update(updates);
@@ -264,14 +265,15 @@
       var new_turn = snapshot.val().current.turn;
       var new_dice = snapshot.val().current.dice;
       var new_counter = snapshot.val().current.counter;
-      console.log("from database: turn: " + new_turn + ", dice: " + new_dice + ", name: " + name + " is not null? " + (name != null));
+      console.log("from database: turn: " + new_turn + ", dice: " + new_dice);
       if(playing && (new_turn == -1 || new_dice == -1)) {
         console.log("will reset page...");
         resetPage();
         return;
       }
+      console.log("my counter: " + counter + ", new counter: " + new_counter);
       if(new_counter > counter) {
-        console.log("new counter: " + new_counter);
+        console.log("setting new counter: " + new_counter);
         turn = new_turn;
         counter = new_counter;
         diceThrown(new_dice);
