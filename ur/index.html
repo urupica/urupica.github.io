@@ -1,0 +1,653 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>The Royal Game Of Ur</title>
+</head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.1/pixi.min.js"></script>
+<body style="font-size:40px;">
+  <div id="winner" style="display: none;"></div>
+  <div id="slots" style="display: block;">Checking available slots...</div>
+  <form id="form" action="javascript:formSubmitted();" style="display: none;">
+    Name: <input type="text" id="name" name="name" style="font-size:40px; display: block;">
+    <input type="submit" value="Submit" style="font-size:40px; display: block;">
+  </form>
+  <div id="canvas" style="display: none;"></div>
+  <!--
+  <button id="goFS">Go fullscreen</button>
+  -->
+  <script>
+  /*
+  function toggleFullScreen() {
+  var doc = window.document;
+  var docEl = doc.documentElement;
+
+  var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+  var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+  if(!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+    requestFullScreen.call(docEl);
+  }
+  else {
+    cancelFullScreen.call(doc);
+  }
+}
+    var goFS = document.getElementById("goFS");
+    goFS.addEventListener("click", function() {
+        //document.body.requestFullscreen();
+        toggleFullScreen();
+    }, false);
+    */
+  </script>
+
+
+  <script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+
+  <!--<div id="renderType">Render type: ???</div>-->
+  <script type="text/javascript">
+    var type = "WebGL"
+    if(!PIXI.utils.isWebGLSupported()){
+      type = "canvas"
+    }
+
+    //$('#renderType').html("Render type: " + type);
+    PIXI.utils.sayHello(type);
+
+    var WIDTH = 800;
+    var HEIGHT = 500;
+
+    var CHIPS = 7;
+
+    var BOARD_PADDING = 18;
+    var CELL_SPACING = 8;
+    var CELL_SIZE = 86;
+
+    var BLACK = "black";
+    var WHITE = "white";
+    var DICE = "dice";
+    var MOVES = "moves";
+    var TURN = "turn";
+    var LAST = "last";
+    var CURRENT = "current";
+    var COLOR = "color";
+    var ID = "id";
+    var NEW_POSITION = "new_position";
+    var NAME = 'name';
+    var UID = 'uid';
+    var COUNTER = 'counter';
+
+    var uid = null;
+    var name = null;
+    var my_color = null;
+    var dice = -1;
+    var turn = WHITE;
+    var playing = false;
+    var counter = -1;
+
+    var availabilityChecked = {BLACK: false, WHITE: false};
+    var whiteAvailable = true;
+    var blackAvailable = true;
+
+    function formSubmitted() {
+      name = document.getElementById("name").value;
+      playing = true;
+      console.log("form submitted: " + name);
+      document.getElementById("winner").style.display = "none";
+      document.getElementById("slots").style.display = "none";
+      document.getElementById("form").style.display = "none";
+      document.getElementById("canvas").style.display = "block";
+      var initialized = false;
+      if(blackAvailable && whiteAvailable) {
+        my_color = Math.random() < 0.5 ? WHITE : BLACK;
+        console.log("both colors available. chosen: " + my_color);
+        initialized = true;
+      } else if(blackAvailable) {
+        my_color = BLACK;
+        console.log("only black available");
+        initialized = true;
+      } else if(whiteAvailable) {
+        my_color = WHITE;
+        console.log("only white available");
+        initialized = true;
+      } else {
+        console.log("no slot available :(");
+      }
+      console.log("my color: " + my_color);
+      if(initialized) {
+        initializeUser();
+        if(my_color == WHITE) {
+          turn = WHITE;
+          counter = 0;
+          throwDice();
+        }
+      }
+    }
+
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyDmXFUYCkAg5myiGQMiMIm0lWVJNwl2bwk",
+      authDomain: "royal-game-of-ur-ca519.firebaseapp.com",
+      databaseURL: "https://royal-game-of-ur-ca519.firebaseio.com",
+      projectId: "royal-game-of-ur-ca519",
+      storageBucket: "royal-game-of-ur-ca519.appspot.com",
+      messagingSenderId: "947370306356"
+    };
+    var defaultApp = firebase.initializeApp(config);
+    var database = firebase.database();
+
+    function initializeUser() {
+      var updates = {};
+      updates[my_color + '/' + NAME] = name;
+      updates[my_color + '/' + UID] = uid;
+      firebase.database().ref().update(updates).then(function() {
+        console.log("user initialized successfully.");
+      }, function(e) {
+        console.log("error initializing user: " + e);
+      });
+    }
+
+    function resetGame() {
+      var updates = {};
+      updates[BLACK + '/' + NAME] = -1;
+      updates[BLACK + '/' + UID] = -1;
+      updates[WHITE + '/' + NAME] = -1;
+      updates[WHITE + '/' + UID] = -1;
+      updates[MOVES + '/' + CURRENT + '/' + TURN] = -1;
+      updates[MOVES + '/' + CURRENT + '/' + DICE] = -1;
+      updates[MOVES + '/' + CURRENT + '/' + COUNTER] = -1;
+      updates[MOVES + '/' + LAST + '/' + COLOR] = -1;
+      updates[MOVES + '/' + LAST + '/' + ID] = -1;
+      updates[MOVES + '/' + LAST + '/' + NEW_POSITION] = -1;
+      firebase.database().ref().update(updates);
+    }
+
+    function submitMove(last_color, last_id, last_new_position) {
+      var updates = {};
+      updates[MOVES + '/' + LAST + '/' + COLOR] = last_color;
+      updates[MOVES + '/' + LAST + '/' + ID] = last_id;
+      updates[MOVES + '/' + LAST + '/' + NEW_POSITION] = last_new_position;
+      updates[MOVES + '/' + CURRENT + '/' + TURN] = turn;
+      updates[MOVES + '/' + CURRENT + '/' + DICE] = dice;
+      updates[MOVES + '/' + CURRENT + '/' + COUNTER] = counter;
+      firebase.database().ref().update(updates);
+    }
+
+
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        // User is signed in.
+        //var isAnonymous = user.isAnonymous;
+        uid = user.uid;
+        console.log("is anonymous: " + user.isAnonymous + ", uid: " + uid);
+        /*
+        if(user.uid == 'dljpZFNvQiZVzQvsyXXCb4QUGQp2') {
+          user.delete();
+        }
+        */
+      } else {
+        console.log("user not signed in, signing in...");
+        firebase.auth().signInAnonymously().catch(function(error) {
+          console.log("error code: " + error.code + ", error message: " + error.message);
+        });
+      }
+    });
+
+
+    firebase.database().ref(BLACK).on('value', function(snapshot) {
+      if(snapshot.val() != null) {
+        availabilityChecked[BLACK] = true;
+        blackAvailable = snapshot.val().uid == -1;
+        updateAvailableSlots();
+        console.log("black: " + snapshot.val().name + ", " + snapshot.val().uid);
+        if(nameMessageBlack != null) {
+          nameMessageBlack.text = snapshot.val().name == -1 || snapshot.val().uid == -1 ? '' : snapshot.val().name;
+          renderer.render(stage);
+        }
+        //checkIfAlreadyPlaying(snapshot.val().uid, snapshot.val().name, BLACK);
+      }
+    });
+    firebase.database().ref(WHITE).on('value', function(snapshot) {
+      if(snapshot.val() != null) {
+        availabilityChecked[WHITE] = true;
+        whiteAvailable = snapshot.val().uid == -1;
+        updateAvailableSlots();
+        console.log("white: " + snapshot.val().name + ", " + snapshot.val().uid);
+        if(nameMessageWhite != null) {
+          nameMessageWhite.text = snapshot.val().name == -1 || snapshot.val().uid == -1 ? '' : snapshot.val().name;
+          renderer.render(stage);
+        }
+        //checkIfAlreadyPlaying(snapshot.val().uid, snapshot.val().name, WHITE);
+      }
+    });
+
+    // TODO: restore session. needs to put all chips in place
+    /*
+    function checkIfAlreadyPlaying(given_uid, given_name, given_color) {
+      if(!playing && given_uid) {
+        name = given_name;
+        my_color = given_color;
+        playing = true;
+        console.log("already playing with name " + name);
+        document.getElementById("slots").style.display = "none";
+        document.getElementById("form").style.display = "none";
+        document.getElementById("canvas").style.display = "initial";
+      }
+    }
+    */
+
+    function updateAvailableSlots() {
+      if(availabilityChecked[BLACK] && availabilityChecked[WHITE]) {
+      var slots = 0;
+        if(blackAvailable) {
+          slots++;
+        }
+        if(whiteAvailable) {
+          slots++;
+        }
+        console.log("slots: " + slots);
+        document.getElementById("slots").innerHTML = "Slots available: " + slots;
+        if(!playing) {
+          document.getElementById("form").style.display = slots == 0 ? "none" : "block";
+        }
+      }
+    }
+
+    firebase.database().ref(MOVES).on('value', function(snapshot) {
+      var color = snapshot.val().last.color;
+      var id = snapshot.val().last.id;
+      var new_pos = snapshot.val().last.new_position;
+      console.log("from database: chip moved: " + color + " id " + id + " to " + new_pos);
+      if(color != my_color && id != -1 && new_pos != -1) {
+        var chip = color == BLACK ? all_black[id] : all_white[id];
+        makeMove(chip, new_pos);
+      }
+
+      var new_turn = snapshot.val().current.turn;
+      var new_dice = snapshot.val().current.dice;
+      var new_counter = snapshot.val().current.counter;
+      console.log("from database: turn: " + new_turn + ", dice: " + new_dice);
+      if(playing && (new_turn == -1 || new_dice == -1)) {
+        console.log("will reset page...");
+        resetPage();
+        return;
+      }
+      console.log("my counter: " + counter + ", new counter: " + new_counter);
+      if(new_counter > counter) {
+        console.log("setting new counter: " + new_counter);
+        turn = new_turn;
+        counter = new_counter;
+        diceThrown(new_dice);
+      }
+    });
+
+    //Create the renderer
+    var renderer = PIXI.autoDetectRenderer(WIDTH, HEIGHT);
+    renderer.backgroundColor = 0x2e455c;
+
+    //Add the canvas to the HTML document
+    document.getElementById("canvas").appendChild(renderer.view);
+    //document.body.appendChild(renderer.view);
+
+    //Create a container object called the `stage`
+    var stage = new PIXI.Container();
+
+    PIXI.loader
+    .add("board.png")
+    .add("chip_black.png")
+    .add("chip_white.png")
+    .load(setup);
+
+    var board_x = {};
+    var board_y = {};
+    var board = {};
+    var black_home = [];
+    var white_home = [];
+    var all_black = {};
+    var all_white = {};
+    var black_finished = 0;
+    var white_finished = 0;
+    var can_move_black = true;
+    var can_move_white = true;
+
+    var diceBlack, diceMessageBlack;
+    var diceWhite, diceMessageWhite;
+    var nameMessageBlack, nameMessageWhite;
+
+    function Chip(color, id, position, playable) {
+      var self = this;
+      var path = "chip_" + color + ".png";
+      this.sprite = new PIXI.Sprite(
+        PIXI.loader.resources[path].texture
+      );
+      this.color = color;
+      this.id = id;
+      this.position = position;
+      this.playable = playable;
+
+      this.nextPosition = nextPosition;
+
+      this.place = function(offset = 0) {
+        if(this.position == 0) {
+          this.sprite.x = 150 + offset*15;
+          this.sprite.y = this.color == BLACK ? 20 : HEIGHT - 20 - this.sprite.height;
+        } else if(this.position == 21) {
+          this.sprite.x = 600 + offset*15;
+          this.sprite.y = this.color == BLACK ? 20 : HEIGHT - 20 - this.sprite.height;
+        } else {
+          this.sprite.x = board_x[this.position] + parseInt(Math.random()*(CELL_SIZE - this.sprite.width));
+          this.sprite.y = board_y[this.position] + parseInt(Math.random()*(CELL_SIZE - this.sprite.height));
+        }
+      };
+
+      this.sprite.interactive = true;
+      this.sprite.on('pointerdown', onClick);
+
+      function onClick() {
+        console.log("turn: " + turn + ", my color: " + my_color + ", touched color: " + self.color);
+        if(turn == my_color && turn == self.color && (dice == 0 || turn == BLACK && !can_move_black || turn == WHITE && !can_move_white)) {
+          console.log("no move - change turn");
+          changeTurn();
+          throwDice();
+          return;
+        }
+        if(turn == my_color && turn == self.color && self.playable) {
+          var pos = nextPosition(dice);
+          if(pos != null && (pos == 21 || board[pos] == null || (!isSecure(pos) && board[pos].color != self.color))) {
+            makeMove(self, pos);
+            //sendMove(self.color, self.id, pos);
+          }
+        }
+      }
+
+      function nextPosition(moves) {
+        var pos = self.position;
+        while(pos != null && moves > 0) {
+          pos = moveOne(pos);
+          moves--;
+        }
+        return pos;
+      }
+
+      function moveOne(pos) {
+        if(pos == 21) {
+          return null;
+        }
+        if(self.color == BLACK) {
+          if(pos == 4) {
+            return 9;
+          }
+          if(pos == 18) {
+            return 21;
+          }
+        } else {
+          if(pos == 0) {
+            return 5;
+          }
+          if(pos == 16) {
+            return 19;
+          }
+        }
+        return pos + 1;
+      }
+    }
+
+    function makeMove(chip, pos) {
+      console.log("making move " + chip.color + ", id: " + chip.id + ", new pos: " + pos);
+      if(chip.position > 0) {
+        board[chip.position] = null;
+      } else {
+        var stack = chip.color == BLACK ? black_home : white_home;
+        stack.pop();
+        if(stack.length > 0) {
+          stack[stack.length - 1].playable = true;
+        }
+      }
+      if(pos < 21) {
+        //console.log("that position: " + board[pos]);
+        if(board[pos] != null) {
+          console.log("EATING!!!!");
+          var stack = chip.color == BLACK ? white_home : black_home;
+          if(stack.length > 0) {
+            stack[stack.length - 1].playable = false;
+          }
+          board[pos].position = 0;
+          board[pos].place(stack.length);
+          stack.push(board[pos]);
+          //moveChip(board[pos].color, board[pos].id, 0);
+        }
+        board[pos] = chip;
+      } else {
+        if(chip.color == BLACK)  {
+          black_finished++;
+        } else {
+          white_finished++;
+        }
+      }
+      chip.position = pos;
+      //moveChip(chip.color, chip.id, pos);
+      var offset = pos < 21 ? 0 : chip.color == BLACK ? black_finished - 1 : white_finished - 1;
+      chip.place(offset);
+      if(black_finished < CHIPS && white_finished < CHIPS) {
+        if(chip.color == my_color) {
+          if(!isSecure(pos)) {
+            changeTurn();
+          }
+          throwDice(chip.color, chip.id, pos);
+        }
+      } else {
+        resetPage();
+        resetGame();
+      }
+      renderer.render(stage);
+    }
+
+    function resetPage() {
+      console.log("resetting page");
+      document.getElementById("winner").style.display = "block";
+      if(black_finished == CHIPS && my_color == BLACK || white_finished == CHIPS && my_color == WHITE) {
+        document.getElementById("winner").innerHTML = "YOU WON!";
+      } else {
+        document.getElementById("winner").innerHTML = "You lost :(";
+      }
+      document.getElementById("slots").style.display = "block";
+      document.getElementById("form").style.display = "block";
+      document.getElementById("canvas").style.display = "none";
+
+      name = null;
+      my_color = null;
+      dice = -1;
+      turn = WHITE;
+      playing = false;
+      counter = -1;
+
+      black_home = [];
+      white_home = [];
+
+      for(i = 1; i <= CHIPS; i++) {
+        var black_chip = all_black[i];
+        black_chip.position = 0;
+        black_chip.playable = i == CHIPS;
+        black_chip.place(black_home.length);
+        black_home.push(black_chip);
+
+        var white_chip = all_white[i];
+        white_chip.position = 0;
+        white_chip.playable = i == CHIPS;
+        white_chip.place(white_home.length);
+        white_home.push(white_chip);
+      }
+
+      for(i = 1; i <= 20; i++) {
+        board[i] = null;
+      }
+
+      black_finished = 0;
+      white_finished = 0;
+      can_move_black = true;
+      can_move_white = true;
+
+      // TODO: reset other screen, too!
+      diceMessageWhite.visible = false;
+      diceMessageBlack.visible = false;
+    }
+
+    function isSecure(pos) {
+      return pos == 4 || pos == 8 || pos == 12 || pos == 18 || pos == 20;
+    }
+
+    function changeTurn() {
+      turn = turn == WHITE ? BLACK : WHITE;
+    }
+
+    function throwDice(last_color = -1, last_id = -1, last_new_position = -1) {
+      counter++;
+      var rand = Math.random()*16;
+      var new_dice;
+      if(rand < 1) {
+        new_dice = 0;
+      } else if(rand < 5) {
+        new_dice = 1;
+      } else if(rand < 11) {
+        new_dice = 2;
+      } else if(rand < 15) {
+        new_dice = 3;
+      } else {
+        new_dice = 4;
+      }
+      //new_dice = 4;
+      console.log("dice thrown: " + new_dice + ", turn: " + turn);
+      diceThrown(new_dice);
+      submitMove(last_color, last_id, last_new_position);
+    }
+
+    function diceThrown(newDice) {
+      dice = newDice;
+      if(dice != -1) {
+        var diceMessageTurn = turn == WHITE ? diceMessageWhite : diceMessageBlack;
+        var diceMessageOther = turn == WHITE ? diceMessageBlack : diceMessageWhite;
+        var canMoveTurn = dice > 0 && canMove();
+        console.log("can move: " + canMoveTurn);
+        if(turn == BLACK) {
+          can_move_black = canMoveTurn;
+        } else {
+          can_move_white = canMoveTurn;
+        }
+        diceMessageTurn.style.fill = canMoveTurn ? "white" : "red";
+        diceMessageTurn.text = dice;
+        diceMessageTurn.visible = true;
+        diceMessageOther.visible = false;
+      } else {
+        diceMessageBlack.visible = false;
+        diceMessageWhite.visible = false;
+      }
+      renderer.render(stage);
+    }
+
+    function canMove() {
+      var all_chips = turn == BLACK ? all_black : all_white;
+      for(i = 1; i <= CHIPS; i++) {
+        var chip = all_chips[i];
+        console.log("checking " + turn + " chip. playable? " + chip.playable);
+        if(chip.playable) {
+          var pos = chip.nextPosition(dice);
+          console.log("checking " + turn + " chip. pos " + pos);
+          if(pos != null) {
+            if(pos < 21) {
+              console.log("checking " + turn + " chip. board " + board[pos] + ", color: " + (board[pos] == null ? " - " : board[pos].color));
+            }
+            if(pos == 21 || board[pos] == null || (!isSecure(pos) && board[pos].color != turn)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    function setup() {
+      var board_sprite = new PIXI.Sprite(
+        PIXI.loader.resources["board.png"].texture
+      );
+      board_sprite.x = (WIDTH - board_sprite.width)/2;
+      board_sprite.y = (HEIGHT - board_sprite.height)/2;
+      stage.addChild(board_sprite);
+
+      for(i = 1; i <= 4; i++) {
+        board_x[i] = board_sprite.x + BOARD_PADDING + (3 - (i - 1))*(CELL_SPACING + CELL_SIZE);
+        board_x[i + 4] = board_x[i];
+      }
+      for(i = 9; i <= 16; i++) {
+        board_x[i] = board_sprite.x + BOARD_PADDING + (i - 9)*(CELL_SPACING + CELL_SIZE);
+      }
+      for(i = 17; i <= 18; i++) {
+        board_x[i] = board_sprite.x + BOARD_PADDING + (7 - (i - 17))*(CELL_SPACING + CELL_SIZE);
+        board_x[i + 2] = board_x[i];
+      }
+
+      for(i = 1; i <= 4; i++) {
+        board_y[i] = board_sprite.y + BOARD_PADDING;
+        board_y[i + 4] = board_y[i] + 2*(CELL_SPACING + CELL_SIZE);
+      }
+      for(i = 9; i <= 16; i++) {
+        board_y[i] = board_sprite.y + BOARD_PADDING + CELL_SPACING + CELL_SIZE;
+      }
+      for(i = 17; i <= 18; i++) {
+        board_y[i] = board_y[1];
+        board_y[i + 2] = board_y[8];
+      }
+
+      for(i = 1; i <= 20; i++) {
+        board[i] = null;
+      }
+
+      for(i = 1; i <= CHIPS; i++) {
+        var black_chip = new Chip(BLACK, i, 0, i == CHIPS);
+        black_chip.place(black_home.length);
+        black_home.push(black_chip);
+        all_black[i] = black_chip;
+        stage.addChild(black_chip.sprite);
+
+        var white_chip = new Chip(WHITE, i, 0, i == CHIPS);
+        white_chip.place(white_home.length);
+        white_home.push(white_chip);
+        all_white[i] = white_chip;
+        stage.addChild(white_chip.sprite);
+      }
+
+      diceMessageBlack = new PIXI.Text(
+          "",
+          {fontFamily: "Arial", fontSize: 80, fill: "white"}
+      );
+      diceMessageWhite = new PIXI.Text(
+          "",
+          {fontFamily: "Arial", fontSize: 80, fill: "white"}
+      );
+      nameMessageBlack = new PIXI.Text(
+          "",
+          {fontFamily: "Arial", fontSize: 50, fill: "white"}
+      );
+      nameMessageWhite = new PIXI.Text(
+          "",
+          {fontFamily: "Arial", fontSize: 50, fill: "white"}
+      );
+
+      diceMessageBlack.visible = false;
+      diceMessageWhite.visible = false;
+      diceMessageBlack.position.set(475, 100);
+      diceMessageWhite.position.set(475, HEIGHT - 100 - 80);
+      nameMessageBlack.position.set(400, 30);
+      nameMessageWhite.position.set(400, HEIGHT - 30 - 50);
+      stage.addChild(diceMessageBlack);
+      stage.addChild(diceMessageWhite);
+      stage.addChild(nameMessageBlack);
+      stage.addChild(nameMessageWhite);
+      //displayNames();
+
+      turn = WHITE;
+
+      //Tell the `renderer` to `render` the `stage`
+      //renderer.render(stage);
+    }
+  </script>
+</body>
+</html>
